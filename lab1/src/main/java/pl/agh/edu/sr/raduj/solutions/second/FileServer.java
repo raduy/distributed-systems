@@ -3,7 +3,6 @@ package pl.agh.edu.sr.raduj.solutions.second;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -13,6 +12,9 @@ import java.nio.file.Paths;
 public class FileServer {
 
     private static final int DEFAULT_PORT = 4444;
+    private static final int CHUNK_SIZE = 1024;
+    private static final String FILE_NAME = "names.txt";
+    private static final String PATH_TO_FILE = "/src/main/java/pl/agh/edu/sr/raduj/solutions/second/cloud/";
 
     public static void main(String[] args) throws IOException {
 
@@ -52,8 +54,7 @@ public class FileServer {
 
     private static void listenForClient(ServerSocket serverSocket) {
         try (Socket clientSocket = serverSocket.accept();
-             OutputStream outputStream = clientSocket.getOutputStream();
-             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))) {
+             OutputStream outputStream = clientSocket.getOutputStream()) {
 
             println("Client connected on socket! %s", clientSocket);
 
@@ -86,11 +87,11 @@ public class FileServer {
     private static void sendFileContent(OutputStream outputStream, File file) throws IOException {
         int sentBytes = 0;
         FileInputStream fileInputStream = new FileInputStream(file);
-        byte[] buffer = new byte[1024];
+        byte[] buffer = new byte[CHUNK_SIZE];
         long length = file.length();
         int offset = 0;
 
-        while(sentBytes < length) {
+        while (sentBytes < length) {
             int read_from_file = fileInputStream.read(buffer);
             outputStream.write(buffer, offset, read_from_file);
             sentBytes += read_from_file;
@@ -114,20 +115,13 @@ public class FileServer {
 
     private static File openFile() {
         String homeDir = System.getProperty("user.dir");
-        Path path = Paths.get(homeDir + "/src/main/java/pl/agh/edu/sr/raduj/solutions/second/cloud/", "names.txt");
-
-        try {
-            System.out.println("File content:");
-            Files.lines(path).forEach(System.out::println);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Path path = Paths.get(homeDir + PATH_TO_FILE, FILE_NAME);
 
         return path.toFile();
     }
 
     private static void println(String toPrint, Object... args) {
-//        Could be replaced with logger
+//        Replace with logger if needed
         System.out.println(String.format(toPrint, args));
     }
 }
